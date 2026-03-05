@@ -80,6 +80,17 @@ IF NOT EXIST "data" mkdir data
 IF NOT EXIST "reports" mkdir reports
 IF NOT EXIST "logs" mkdir logs
 
+REM ── Create run helper script ──────────────────────────────────────────────────
+REM Generates run.bat so users can launch the agent with one double-click.
+REM PYTHONNOUSERSITE=1 prevents Windows Store Python stub modules from
+REM shadowing venv packages (common issue on Windows 10/11).
+(
+    echo @echo off
+    echo SET PYTHONNOUSERSITE=1
+    echo call "%~dp0.venv\Scripts\activate.bat"
+    echo python main.py %%*
+) > run.bat
+
 REM ── Done ──────────────────────────────────────────────────────────────────────
 echo.
 echo =====================================================
@@ -88,17 +99,15 @@ echo =====================================================
 echo.
 echo [5/5] How to run:
 echo.
-echo   Activate environment (run each time you open a terminal):
+echo   Option A – Double-click run.bat ^(simplest^):
+echo     run.bat run          ^(generates a report and exits^)
+echo     run.bat schedule     ^(runs every 6 hours^)
+echo     run.bat status       ^(view run history^)
+echo.
+echo   Option B – Activate manually each terminal session:
 echo     .venv\Scripts\activate
-echo.
-echo   Run once (generates a report and exits):
+echo     set PYTHONNOUSERSITE=1
 echo     python main.py run
-echo.
-echo   Run every 6 hours automatically:
-echo     python main.py schedule
-echo.
-echo   View run history:
-echo     python main.py status
 echo.
 echo   Reports are saved to: %CD%\reports\
 echo.

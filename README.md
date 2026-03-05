@@ -19,25 +19,39 @@ An autonomous agent that continuously monitors the GenAI, AI Agents, software te
 
 ## Quick Start
 
-### 1. Clone and configure
+### Mac / Linux
+
+```bash
+git clone <repo-url> && cd qa-intelligence-agent
+bash setup.sh          # creates .venv, installs deps, prompts for API key
+python3 main.py run    # first run – generates a report
+```
+
+### Windows
+
+```bat
+git clone <repo-url> && cd qa-intelligence-agent
+setup.bat              :: creates .venv, installs deps, creates run.bat
+run.bat run            :: first run – generates a report
+```
+
+> **Windows note:** `run.bat` sets `PYTHONNOUSERSITE=1` automatically.
+> This prevents Windows Store Python stub modules from shadowing venv
+> packages (a known issue on Windows 10/11 when the Windows Store Python
+> app is installed). If you run `python main.py run` directly without
+> this flag and get an `ImportError`, add `set PYTHONNOUSERSITE=1` to
+> your terminal session first.
+
+### Manual setup (any OS)
 
 ```bash
 cd qa-intelligence-agent
 cp .env.example .env
-# Edit .env and set at minimum: OPENAI_API_KEY=sk-...
-```
+# Edit .env – set OPENAI_API_KEY=sk-...
 
-### 2. Install dependencies
-
-```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 3. Run once (test it works)
-
-```bash
 python main.py run
 ```
 
@@ -86,10 +100,10 @@ All settings are via environment variables (`.env` file):
 | Variable | Default | Description |
 |---|---|---|
 | `OPENAI_API_KEY` | **required** | OpenAI API key |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Model for summarisation and trend analysis |
+| `OPENAI_MODEL` | `gpt-4o` | Model for summarisation and trend analysis (`gpt-4o-mini` for lower cost) |
 | `GITHUB_TOKEN` | optional | GitHub PAT (raises API rate limit from 60 → 5000 req/hr) |
 | `SCHEDULE_INTERVAL_HOURS` | `6` | How often the agent runs |
-| `MIN_RELEVANCE_SCORE` | `60` | Minimum score (0–100) to include an article in reports |
+| `MIN_RELEVANCE_SCORE` | `40` | Minimum score (0–100) to include an article in reports (lower = more articles, higher OpenAI cost) |
 | `NOTIFY_EMAIL` | optional | Email address to send alert notifications to |
 | `SLACK_BOT_TOKEN` | optional | Slack bot token for channel notifications |
 | `SLACK_CHANNEL` | `#qa-intelligence` | Slack channel to post to |
