@@ -34,7 +34,9 @@ if "sqlite" in settings.database_url:
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+# expire_on_commit=False prevents DetachedInstanceError when ORM objects are
+# accessed after the session closes (e.g. Trend objects passed to report generators)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 
 def init_db() -> None:
