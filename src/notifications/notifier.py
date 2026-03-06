@@ -360,84 +360,194 @@ class Notifier:
         date_str: str,
     ) -> str:
         """
-        Build the complete email HTML:
-          header banner → alert section → full report embedded inline.
+        Build a clean, email-client-compatible HTML body.
+        The full report is sent as an attachment – NOT embedded inline
+        (embedding a full HTML doc inside another breaks rendering in Gmail/Outlook).
         """
-        # ── Alert section ──────────────────────────────────────────────────
+        # ── Alert cards ───────────────────────────────────────────────────
         if alert_trends:
-            alert_items = "".join(
-                f"""
-                <div style="background:#fff8f8;border-left:4px solid #e94560;
-                            border-radius:6px;padding:12px 16px;margin:8px 0;">
-                  <strong style="color:#e94560;">
-                    {_CATEGORY_ICONS.get(t.category, "📌")} {t.name}
-                  </strong>
-                  <span style="background:#fde68a;color:#92400e;border-radius:9px;
-                               padding:2px 8px;font-size:0.75em;margin-left:8px;">ALERT</span>
-                  <p style="margin:6px 0 0;color:#374151;font-size:0.9em;">
-                    {t.description or ""}
-                  </p>
-                  <p style="margin:4px 0 0;color:#6b7280;font-size:0.8em;">
-                    Momentum: <strong>{t.momentum_score:.1f}</strong> &nbsp;|&nbsp;
-                    Articles: <strong>{t.article_count}</strong> &nbsp;|&nbsp;
-                    Category: {t.category}
-                  </p>
-                </div>"""
-                for t in alert_trends
-            )
-            alert_block = f"""
-            <div style="margin:24px 0;">
-              <h2 style="color:#e94560;margin-bottom:12px;">🚨 Immediate Attention Required</h2>
-              {alert_items}
-            </div>"""
-        else:
-            alert_block = """
-            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;
-                        padding:12px 16px;margin:24px 0;">
-              ✅ <strong style="color:#166534;">No critical alerts this cycle</strong>
-            </div>"""
+            alert_cards_html = ""
+            for t in alert_trends:
+                icon = _CATEGORY_ICONS.get(t.category, "📌")
+                desc = f'<p style="margin:8px 0 0;color:#374151;font-size:13px;line-height:1.5;">{t.description}</p>' if t.description else ""
+                cat_label = t.category.replace("_", " ").title()
+                alert_cards_html += f"""
+                <tr>
+                  <td style="padding:0 0 10px 0;">
+                    <table width="100%" cellpadding="0" cellspacing="0"
+                           style="background:#fff8f8;border:1px solid #fecaca;
+                                  border-left:4px solid #e94560;border-radius:8px;">
+                      <tr>
+                        <td style="padding:14px 18px;">
+                          <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="vertical-align:middle;">
+                                <span style="font-size:15px;font-weight:700;color:#1a1a2e;">
+                                  {icon} {t.name}
+                                </span>
+                              </td>
+                              <td align="right" style="vertical-align:middle;white-space:nowrap;">
+                                <span style="background:#fde68a;color:#92400e;border-radius:6px;
+                                             padding:3px 10px;font-size:11px;font-weight:700;">
+                                  🔥 ALERT
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                          {desc}
+                          <table cellpadding="0" cellspacing="4" style="margin-top:10px;">
+                            <tr>
+                              <td>
+                                <span style="background:#f0fdf4;color:#166534;border-radius:6px;
+                                             padding:3px 10px;font-size:11px;font-weight:600;">
+                                  📈 Momentum: {t.momentum_score:.1f}
+                                </span>
+                              </td>
+                              <td>
+                                <span style="background:#eff6ff;color:#1d4ed8;border-radius:6px;
+                                             padding:3px 10px;font-size:11px;font-weight:600;">
+                                  📰 {t.article_count} articles
+                                </span>
+                              </td>
+                              <td>
+                                <span style="background:#f3f4f6;color:#6b7280;border-radius:6px;
+                                             padding:3px 10px;font-size:11px;">
+                                  {cat_label}
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>"""
 
-        # ── Divider before embedded report ────────────────────────────────
-        report_section = ""
-        if report_html:
-            report_section = f"""
-            <hr style="border:none;border-top:2px solid #e0e6ed;margin:32px 0;">
-            <p style="color:#6b7280;font-size:0.85em;margin-bottom:16px;">
-              📎 The full report is also attached as an HTML file.
-              Open the attachment in your browser for the best experience.
-            </p>
-            <!-- ═══ EMBEDDED FULL REPORT ═══ -->
-            {report_html}"""
+            alerts_section = f"""
+            <tr>
+              <td style="padding:20px 32px 8px;">
+                <table width="100%" cellpadding="0" cellspacing="0"
+                       style="background:#fff3cd;border:1px solid #f59e0b;border-radius:10px;">
+                  <tr>
+                    <td style="padding:12px 18px;">
+                      <span style="font-size:14px;font-weight:700;color:#92400e;">
+                        🚨 {len(alert_trends)} Active Trend Alert{'s' if len(alert_trends) != 1 else ''}
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 8px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  {alert_cards_html}
+                </table>
+              </td>
+            </tr>"""
+        else:
+            alerts_section = """
+            <tr>
+              <td style="padding:20px 32px 8px;">
+                <table width="100%" cellpadding="0" cellspacing="0"
+                       style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+                  <tr>
+                    <td style="padding:14px 18px;">
+                      <span style="font-size:14px;font-weight:600;color:#166534;">
+                        ✅ No critical alerts this cycle
+                      </span>
+                      <p style="margin:4px 0 0;color:#166534;font-size:12px;opacity:0.75;">
+                        All monitored trends are within normal momentum thresholds
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>"""
 
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>QA Intelligence Report – {date_str}</title>
 </head>
-<body style="margin:0;padding:0;background:#f5f7fa;font-family:system-ui,sans-serif;">
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
 
-  <!-- Header banner -->
-  <div style="background:linear-gradient(135deg,#0f3460 0%,#1a237e 100%);
-              color:white;padding:28px 32px;">
-    <h1 style="margin:0;font-size:1.6rem;font-weight:700;">🧪 QA Intelligence Report</h1>
-    <p style="margin:6px 0 0;opacity:0.75;font-size:0.9rem;">
-      {date_str} &nbsp;|&nbsp; Powered by OpenAI {settings.openai_model}
-    </p>
-  </div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:24px 0;">
+  <tr>
+    <td align="center" style="padding:0 12px;">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;
+                    box-shadow:0 2px 16px rgba(0,0,0,0.10);overflow:hidden;">
 
-  <!-- Body -->
-  <div style="max-width:960px;margin:0 auto;padding:24px;">
-    {alert_block}
-    {report_section}
-  </div>
+        <!-- ── Header ─────────────────────────────────────────────── -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0f3460 0%,#1a237e 100%);padding:28px 32px;">
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">
+              🧪 QA Intelligence Report
+            </h1>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.72);font-size:13px;">
+              {date_str} &nbsp;·&nbsp; Powered by OpenAI {settings.openai_model}
+            </p>
+          </td>
+        </tr>
 
-  <!-- Footer -->
-  <div style="text-align:center;padding:20px;color:#9ca3af;font-size:0.75em;
-              border-top:1px solid #e5e7eb;margin-top:32px;">
-    QA Intelligence Agent &nbsp;|&nbsp; Auto-generated &nbsp;|&nbsp; {date_str}
-  </div>
+        <!-- ── Alert status badge ─────────────────────────────────── -->
+        <tr>
+          <td style="padding:18px 32px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border-bottom:1px solid #f0f0f0;padding-bottom:18px;">
+              <tr>
+                <td align="center">
+                  <span style="background:{'#fef2f2' if alert_trends else '#f0fdf4'};
+                               color:{'#b91c1c' if alert_trends else '#166534'};
+                               border:1px solid {'#fecaca' if alert_trends else '#86efac'};
+                               border-radius:999px;padding:6px 20px;
+                               font-size:13px;font-weight:600;display:inline-block;">
+                    {'🚨 ' + str(len(alert_trends)) + ' active alert' + ('s' if len(alert_trends) != 1 else '') if alert_trends else '✅ All clear — no active alerts'}
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ── Alert cards or all-clear ──────────────────────────── -->
+        {alerts_section}
+
+        <!-- ── Attachment CTA ─────────────────────────────────────── -->
+        <tr>
+          <td style="padding:16px 32px 24px;">
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;">
+              <tr>
+                <td style="padding:14px 18px;">
+                  <p style="margin:0;font-size:13px;color:#1d4ed8;line-height:1.6;">
+                    📎 <strong>Full interactive report is attached.</strong>
+                    Open the HTML file in your browser for the complete trend landscape,
+                    top articles with AI insights, and full category breakdown.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ── Footer ─────────────────────────────────────────────── -->
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e5e7eb;
+                     padding:14px 32px;text-align:center;">
+            <p style="margin:0;color:#9ca3af;font-size:11px;">
+              QA Intelligence Agent &nbsp;·&nbsp; Auto-generated &nbsp;·&nbsp; {date_str}
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>"""
