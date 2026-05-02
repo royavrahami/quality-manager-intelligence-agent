@@ -1,6 +1,26 @@
 # Quality Manager Intelligence Agent
 
+[![QA Intelligence Agent](https://github.com/royavrahami/quality-manager-intelligence-agent/actions/workflows/agent.yml/badge.svg)](https://github.com/royavrahami/quality-manager-intelligence-agent/actions/workflows/agent.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://python.org)
+
 An autonomous agent that continuously monitors the GenAI, AI Agents, software testing, and developer tools landscape — then delivers structured, actionable intelligence reports tailored for **QA Managers** and **Tech Project Managers** in the high-tech industry.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Language** | Python 3.11+ |
+| **LLM** | OpenAI GPT-4o / GPT-4o-mini |
+| **Database** | SQLAlchemy ORM — SQLite (local) or PostgreSQL (production) |
+| **Scheduling** | APScheduler |
+| **Templating** | Jinja2 (HTML reports) |
+| **Config** | pydantic-settings + `.env` |
+| **Notifications** | SMTP (email) + Slack Web API |
+| **Containerisation** | Docker + Docker Compose |
+| **Testing** | pytest + pytest-cov |
 
 ---
 
@@ -158,15 +178,25 @@ qa-intelligence-agent/
 
 ### Execution Cycle
 
-```
-CoreAgent.run()
-  ├── 1. Load active sources from DB
-  ├── 2. Collect   → RSS + GitHub + Arxiv + Web scrapers
-  ├── 3. Process   → Score relevance (fast) → AI summarise (high-score items only)
-  ├── 4. Trends    → LLM detects themes across recent articles
-  ├── 5. Discover  → Mine pages + ask LLM for new source recommendations
-  ├── 6. Report    → Generate HTML + Markdown
-  └── 7. Notify    → Email + Slack alerts for high-momentum trends
+```mermaid
+flowchart TD
+    A[Scheduler / CLI] --> B[CoreAgent.run]
+    B --> C[Load Sources from DB]
+    C --> D[Collect]
+    D --> D1[RSS Feeds]
+    D --> D2[GitHub Trending]
+    D --> D3[Arxiv Papers]
+    D --> D4[Web Scraper]
+    D1 & D2 & D3 & D4 --> E[RelevanceScorer]
+    E --> F["AI Summarizer (GPT-4o-mini)\nhigh-score items only"]
+    F --> G[TrendAnalyzer]
+    G --> H[SourceDiscoverer]
+    H --> I[ReportGenerator]
+    I --> I1[HTML Report]
+    I --> I2[Markdown Report]
+    I1 & I2 --> J[Notifier]
+    J --> J1[Email]
+    J --> J2[Slack]
 ```
 
 ---
@@ -177,6 +207,26 @@ CoreAgent.run()
 pytest                        # Run all tests with coverage
 pytest -m "not integration"   # Skip tests that need network
 pytest tests/test_storage/    # Run a specific module
+```
+
+### Example Test Output
+
+```
+========================= test session starts ==========================
+platform linux -- Python 3.11.9, pytest-8.3.2
+collected 47 items
+
+tests/test_collectors/test_rss_collector.py ........              [  17%]
+tests/test_processors/test_relevance_scorer.py ..........         [  38%]
+tests/test_processors/test_summarizer.py ....                     [  47%]
+tests/test_storage/test_article_repository.py ..............      [  77%]
+tests/test_agent/test_trend_analyzer.py ..........                [ 98%]
+tests/test_notifications/test_notifier.py .                       [100%]
+
+---------- coverage: platform linux, python 3.11.9 -----------
+TOTAL                                                        87%
+
+==================== 47 passed in 6.43s ====================
 ```
 
 ---
@@ -203,6 +253,22 @@ To add a new collector (e.g. LinkedIn, YouTube, Jira changelog):
 1. Create `src/collectors/my_collector.py` with a class following the same interface as `RSSCollector`
 2. Register the call in `CoreAgent._collect()`
 3. Add tests in `tests/test_collectors/test_my_collector.py`
+
+---
+
+## Limitations & Next Steps
+
+**Current limitations:**
+- Report generation requires an active OpenAI API key (no offline fallback)
+- Source discovery quality depends on GPT responses — occasionally suggests irrelevant feeds
+- No deduplication across very similar articles from different sources
+
+**Planned improvements:**
+- [ ] Web UI dashboard (replace static HTML reports)
+- [ ] Vector-based semantic deduplication
+- [ ] Support for additional LLM providers (Anthropic Claude, Gemini)
+- [ ] Slack slash-command to trigger on-demand reports
+- [ ] Multi-workspace configuration (one agent, multiple topic profiles)
 
 ---
 
