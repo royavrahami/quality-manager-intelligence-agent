@@ -24,6 +24,14 @@ An autonomous agent that continuously monitors the GenAI, AI Agents, software te
 
 ---
 
+## Report Preview
+
+| Dashboard & Alerts | Top Articles with AI Summaries |
+|---|---|
+| ![Report header](docs/report-header.png) | ![Report articles](docs/report-articles.png) |
+
+---
+
 ## What It Does
 
 | Capability | Details |
