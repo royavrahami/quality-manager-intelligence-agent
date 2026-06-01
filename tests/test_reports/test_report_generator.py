@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.reports.report_generator import ReportGenerator
-from src.storage.models import Article, Source, Trend
+from src.storage.models import Article, Trend
 
 
 @pytest.fixture

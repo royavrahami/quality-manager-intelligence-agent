@@ -7,7 +7,6 @@ Verifies report structure, table content, keyword cloud, and edge cases.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from unittest.mock import MagicMock

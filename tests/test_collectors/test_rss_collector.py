@@ -6,9 +6,8 @@ Uses the `responses` library to mock HTTP requests and feedparser behaviour.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 import responses as responses_lib
 
 from src.collectors.rss_collector import RSSCollector
