@@ -15,7 +15,6 @@ import logging
 import re
 import string
 from collections import Counter
-from typing import Optional
 
 from src.config.settings import settings
 from src.storage.models import Article

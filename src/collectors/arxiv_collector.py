@@ -16,7 +16,6 @@ from typing import Optional
 import feedparser
 import requests
 
-from src.storage.models import Source
 from src.storage.repository import ArticleRepository, SourceRepository
 
 logger = logging.getLogger(__name__)
