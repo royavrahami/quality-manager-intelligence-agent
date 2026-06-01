@@ -14,10 +14,14 @@ import json
 import logging
 from typing import Optional
 
-import openai
-from openai import OpenAI
-
 from src.config.settings import settings
+from src.llm import (
+    LLMProvider,
+    ProviderConnectionError,
+    ProviderError,
+    ProviderRateLimitError,
+    get_provider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +79,9 @@ class Summarizer:
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         language: Optional[str] = None,
+        provider: Optional[LLMProvider] = None,
     ) -> None:
-        self._client = OpenAI(api_key=api_key or settings.openai_api_key)
+        self._provider = provider or get_provider(api_key=api_key)
         self._model = model or settings.openai_model
         self._max_tokens = settings.openai_max_tokens
         self._system_prompt = _build_system_prompt(language or settings.report_language)
@@ -108,27 +113,25 @@ class Summarizer:
         )
 
         try:
-            response = self._client.chat.completions.create(
+            raw_json = self._provider.chat_json(
+                system=self._system_prompt,
+                user=user_prompt,
                 model=self._model,
-                messages=[
-                    {"role": "system", "content": self._system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
                 max_tokens=self._max_tokens,
                 temperature=0.3,
-                response_format={"type": "json_object"},
             )
-            raw_json = response.choices[0].message.content
             return self._parse_response(raw_json)
 
-        except openai.RateLimitError:
+        except ProviderRateLimitError:
             # REQ-08: set quota flag so the report can show the warning banner
             self.quota_warning = True
-            logger.warning("OpenAI rate limit hit – skipping article: %s", title[:50])
-        except openai.APIConnectionError as exc:
-            logger.error("OpenAI connection error: %s", exc)
-        except Exception as exc:
+            logger.warning("LLM rate limit hit – skipping article: %s", title[:50])
+        except ProviderConnectionError as exc:
+            logger.error("LLM connection error: %s", exc)
+        except ProviderError as exc:
             logger.error("Summarisation failed for '%s': %s", title[:50], exc)
+        except Exception as exc:  # noqa: BLE001 - defensive: never crash the run
+            logger.error("Unexpected summarisation error for '%s': %s", title[:50], exc)
 
         return None
 

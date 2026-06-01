@@ -112,19 +112,29 @@ class TestKeywordExtractorFromInsights:
         assert isinstance(keywords, list)
 
 
+class _FakeProvider:
+    """LLMProvider stub used to test the keyword extractor's LLM path."""
+
+    name = "fake"
+
+    def __init__(self, content=None, error=None) -> None:
+        self._content = content
+        self._error = error
+
+    def chat_json(self, system, user, *, model, max_tokens, temperature=0.3, timeout=None):
+        if self._error is not None:
+            raise self._error
+        return self._content
+
+
 class TestKeywordExtractorLLM:
-    """Tests for LLM-powered keyword extraction (mocked API)."""
+    """Tests for LLM-powered keyword extraction (provider mocked)."""
 
     def test_llm_returns_keyword_list(self) -> None:
-        mock_response = MagicMock()
-        mock_response.choices[0].message.content = json.dumps(
-            {"keywords": ["LLM Agents", "RAG Pipeline", "Playwright", "CI/CD"]}
+        provider = _FakeProvider(
+            content=json.dumps({"keywords": ["LLM Agents", "RAG Pipeline", "Playwright", "CI/CD"]})
         )
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_response
-
-        # OpenAI is imported locally inside _from_llm, patch at openai module level
-        with patch("openai.OpenAI", return_value=mock_client):
+        with patch("src.llm.get_provider", return_value=provider):
             extractor = KeywordExtractor(use_llm=True)
             extractor._use_llm = True
             article = _make_article(title="AI Testing", raw_content="Some content about AI")
@@ -134,10 +144,8 @@ class TestKeywordExtractorLLM:
         assert "Playwright" in keywords
 
     def test_llm_failure_returns_empty_list(self) -> None:
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.side_effect = Exception("API error")
-
-        with patch("openai.OpenAI", return_value=mock_client):
+        provider = _FakeProvider(error=Exception("API error"))
+        with patch("src.llm.get_provider", return_value=provider):
             extractor = KeywordExtractor(use_llm=True)
             extractor._use_llm = True
             article = _make_article(title="Test", raw_content="Content")

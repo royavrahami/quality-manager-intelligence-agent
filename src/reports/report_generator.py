@@ -18,10 +18,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-import openai
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.config.settings import settings
+from src.llm import ProviderRateLimitError, get_provider
 from src.storage.models import Article, Trend
 
 logger = logging.getLogger(__name__)
@@ -326,16 +326,13 @@ Return ONLY a valid JSON object with a "sections" array. Example:
 {{"sections":[{{"title":"...", "central_idea":"...", "article_indices":[1,3,5]}}]}}"""
 
         try:
-            from openai import OpenAI
-            client = OpenAI(api_key=settings.openai_api_key)
-            response = client.chat.completions.create(
+            raw = get_provider().chat_json(
+                system="",
+                user=prompt,
                 model=settings.openai_model,
-                messages=[{"role": "user", "content": prompt}],
                 max_tokens=1200,
                 temperature=0.3,
-                response_format={"type": "json_object"},
             )
-            raw = response.choices[0].message.content
             parsed = json.loads(raw)
             sections_data = parsed.get("sections", []) if isinstance(parsed, dict) else (parsed if isinstance(parsed, list) else [])
 
@@ -352,7 +349,7 @@ Return ONLY a valid JSON object with a "sections" array. Example:
             if result:
                 return result
 
-        except openai.RateLimitError:
+        except ProviderRateLimitError:
             logger.warning("REQ-06: rate limit hit during thematic clustering – skipping")
         except Exception as exc:
             logger.warning("REQ-06: thematic clustering failed (%s) – skipping", exc)

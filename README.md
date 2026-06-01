@@ -127,8 +127,10 @@ All settings are via environment variables (`.env` file):
 
 | Variable | Default | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | **required** | OpenAI API key |
+| `LLM_PROVIDER` | `openai` | LLM backend: `openai` or `anthropic` (pluggable — see `src/llm/`) |
+| `OPENAI_API_KEY` | **required** | OpenAI API key (when `LLM_PROVIDER=openai`) |
 | `OPENAI_MODEL` | `gpt-4o` | Model for summarisation and trend analysis (`gpt-4o-mini` for lower cost) |
+| `ANTHROPIC_API_KEY` | optional | Anthropic API key (when `LLM_PROVIDER=anthropic`) |
 | `GITHUB_TOKEN` | optional | GitHub PAT (raises API rate limit from 60 → 5000 req/hr) |
 | `SCHEDULE_INTERVAL_HOURS` | `6` | How often the agent runs |
 | `MIN_RELEVANCE_SCORE` | `50` | Minimum score (0–100) to include an article in reports (lower = more articles, higher OpenAI cost) |
@@ -221,28 +223,29 @@ pytest tests/test_storage/    # Run a specific module
 
 ```
 ========================= test session starts =========================
-collected 121 items
+collected 129 items
 
-tests/test_agent/test_trend_analyzer.py .............             [ 14%]
-tests/test_agent/test_daily_digest_agent.py .....                 [ 18%]
-tests/test_collectors/test_arxiv_collector.py ........            [ 21%]
-tests/test_collectors/test_github_collector.py ....               [ 24%]
-tests/test_collectors/test_rss_collector.py ......                [ 29%]
-tests/test_notifications/test_notifier.py ........               [ 36%]
-tests/test_processors/test_content_processor.py ..               [ 38%]
-tests/test_processors/test_keyword_extractor.py ..........        [ 46%]
-tests/test_processors/test_relevance_scorer.py ..........         [ 54%]
-tests/test_processors/test_summarizer.py ........                 [ 61%]
-tests/test_reports/test_daily_digest_generator.py ............    [ 71%]
-tests/test_reports/test_report_generator.py ..........            [ 79%]
-tests/test_scheduler/test_scheduler.py ..                         [ 80%]
-tests/test_storage/test_database.py ...                           [ 83%]
+tests/test_agent/test_trend_analyzer.py .............             [ 13%]
+tests/test_agent/test_daily_digest_agent.py .....                 [ 17%]
+tests/test_collectors/test_arxiv_collector.py ........            [ 23%]
+tests/test_collectors/test_github_collector.py ....               [ 26%]
+tests/test_collectors/test_rss_collector.py ......                [ 31%]
+tests/test_llm/test_providers.py .......                          [ 36%]
+tests/test_notifications/test_notifier.py ........               [ 42%]
+tests/test_processors/test_content_processor.py ..               [ 44%]
+tests/test_processors/test_keyword_extractor.py ..........        [ 52%]
+tests/test_processors/test_relevance_scorer.py ..........         [ 59%]
+tests/test_processors/test_summarizer.py ...........              [ 68%]
+tests/test_reports/test_daily_digest_generator.py ............    [ 77%]
+tests/test_reports/test_report_generator.py ..........            [ 85%]
+tests/test_scheduler/test_scheduler.py ..                         [ 86%]
+tests/test_storage/test_database.py ...                           [ 89%]
 tests/test_storage/test_repository.py ....................        [100%]
 
 ---------- coverage: platform, python 3.12 -----------
-TOTAL                                    2038    732    64%
+TOTAL                                    2099    740    65%
 
-========================= 121 passed in 8.68s =========================
+========================= 129 passed in 18.03s =========================
 ```
 
 > Coverage currently concentrates on the scoring, summarisation, reporting
