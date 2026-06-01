@@ -99,7 +99,8 @@ class Notifier:
         from rich.table import Table
         table = Table(title=f"📋 Daily Digest – {stats.date_str}", box=box.ROUNDED,
                       header_style="bold white on #0f3460")
-        table.add_column("Metric"); table.add_column("Value", justify="right", style="bold")
+        table.add_column("Metric")
+        table.add_column("Value", justify="right", style="bold")
         table.add_row("Articles collected", str(stats.total_articles))
         table.add_row("Average score", str(stats.avg_relevance))
         table.add_row("Alert trends", str(stats.alert_count))
@@ -211,7 +212,8 @@ class Notifier:
 
         try:
             with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
-                server.ehlo(); server.starttls()
+                server.ehlo()
+                server.starttls()
                 server.login(settings.smtp_user, settings.smtp_password)
                 server.sendmail(settings.smtp_user, settings.notify_email, msg.as_string())
             logger.info("Daily digest email sent to %s", settings.notify_email)
@@ -831,7 +833,7 @@ class Notifier:
         if alert_trends:
             alert_cards_html = ""
             for t in alert_trends:
-                icon = _CATEGORY_ICONS.get(t.category, "📌")
+                icon = _CATEGORY_META.get(t.category or "general", _CATEGORY_META["general"])["icon"]
                 desc = f'<p style="margin:8px 0 0;color:#374151;font-size:13px;line-height:1.5;">{t.description}</p>' if t.description else ""
                 cat_label = t.category.replace("_", " ").title()
                 alert_cards_html += f"""

@@ -313,7 +313,6 @@ class CoreAgent:
 
         # ── Score boost for recent articles (< 30 days) ─────────────────────────
         if settings.prioritize_recent_articles:
-            thirty_days_ago = now - timedelta(days=30)
             for a in articles:
                 pub_date = a.published_at
                 if pub_date:

@@ -22,11 +22,11 @@ from typing import Optional
 import openai
 from openai import OpenAI
 
-_SIMILARITY_THRESHOLD = 0.6  # Jaccard similarity threshold for trend deduplication
-
 from src.config.settings import settings
 from src.storage.models import Article, Trend
 from src.storage.repository import ArticleRepository, TrendRepository
+
+_SIMILARITY_THRESHOLD = 0.6  # Jaccard similarity threshold for trend deduplication
 
 logger = logging.getLogger(__name__)
 

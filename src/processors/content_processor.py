@@ -18,7 +18,6 @@ from typing import Optional
 from src.config.settings import settings
 from src.processors.relevance_scorer import RelevanceScorer
 from src.processors.summarizer import Summarizer
-from src.storage.models import Article
 from src.storage.repository import ArticleRepository, SourceRepository
 
 logger = logging.getLogger(__name__)
