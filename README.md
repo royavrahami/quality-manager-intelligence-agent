@@ -131,7 +131,7 @@ All settings are via environment variables (`.env` file):
 | `OPENAI_MODEL` | `gpt-4o` | Model for summarisation and trend analysis (`gpt-4o-mini` for lower cost) |
 | `GITHUB_TOKEN` | optional | GitHub PAT (raises API rate limit from 60 → 5000 req/hr) |
 | `SCHEDULE_INTERVAL_HOURS` | `6` | How often the agent runs |
-| `MIN_RELEVANCE_SCORE` | `40` | Minimum score (0–100) to include an article in reports (lower = more articles, higher OpenAI cost) |
+| `MIN_RELEVANCE_SCORE` | `50` | Minimum score (0–100) to include an article in reports (lower = more articles, higher OpenAI cost) |
 | `NOTIFY_EMAIL` | optional | Email address to send alert notifications to |
 | `SLACK_BOT_TOKEN` | optional | Slack bot token for channel notifications |
 | `SLACK_CHANNEL` | `#qa-intelligence` | Slack channel to post to |
@@ -220,22 +220,27 @@ pytest tests/test_storage/    # Run a specific module
 ### Example Test Output
 
 ```
-========================= test session starts ==========================
-platform linux -- Python 3.11.9, pytest-8.3.2
-collected 47 items
+========================= test session starts =========================
+collected 79 items
 
-tests/test_collectors/test_rss_collector.py ........              [  17%]
-tests/test_processors/test_relevance_scorer.py ..........         [  38%]
-tests/test_processors/test_summarizer.py ....                     [  47%]
-tests/test_storage/test_article_repository.py ..............      [  77%]
-tests/test_agent/test_trend_analyzer.py ..........                [ 98%]
-tests/test_notifications/test_notifier.py .                       [100%]
+tests/test_collectors/test_rss_collector.py ......                [  7%]
+tests/test_notifications/test_notifier.py ...                     [ 11%]
+tests/test_processors/test_keyword_extractor.py ..........        [ 24%]
+tests/test_processors/test_relevance_scorer.py ..........         [ 36%]
+tests/test_processors/test_summarizer.py ........                 [ 46%]
+tests/test_reports/test_daily_digest_generator.py ............    [ 62%]
+tests/test_reports/test_report_generator.py ..........            [ 74%]
+tests/test_storage/test_repository.py ....................        [100%]
 
----------- coverage: platform linux, python 3.11.9 -----------
-TOTAL                                                        87%
+---------- coverage: platform, python 3.12 -----------
+TOTAL                                    2011   1302    35%
 
-==================== 47 passed in 6.43s ====================
+========================= 79 passed in 6.63s =========================
 ```
+
+> Coverage currently concentrates on the scoring, summarisation, reporting
+> and storage core. Broadening unit coverage to the collector, scheduler and
+> notification layers is tracked in the roadmap.
 
 ---
 
