@@ -831,7 +831,7 @@ class Notifier:
         if alert_trends:
             alert_cards_html = ""
             for t in alert_trends:
-                icon = _CATEGORY_ICONS.get(t.category, "📌")
+                icon = _CATEGORY_META.get(t.category or "general", _CATEGORY_META["general"])["icon"]
                 desc = f'<p style="margin:8px 0 0;color:#374151;font-size:13px;line-height:1.5;">{t.description}</p>' if t.description else ""
                 cat_label = t.category.replace("_", " ").title()
                 alert_cards_html += f"""
