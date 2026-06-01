@@ -118,30 +118,23 @@ class KeywordExtractor:
     def _from_llm(self, article: Article) -> list[str]:
         """Ask GPT to return the top keywords as a JSON array."""
         try:
-            from openai import OpenAI
-            client = OpenAI(api_key=settings.openai_api_key)
+            from src.llm import get_provider
+            provider = get_provider()
 
             text = f"{article.title}\n{(article.raw_content or '')[:1500]}"
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",   # Use mini for keyword extraction (cheap + fast)
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a keyword extractor. "
-                            "Return ONLY a JSON array of up to 6 short, meaningful keywords "
-                            "or keyphrases (2-3 words max each) from the text. "
-                            "Focus on technology, tools, concepts. No stop words. "
-                            "Example: [\"LLM Agents\", \"RAG\", \"Playwright\", \"CI/CD\"]"
-                        ),
-                    },
-                    {"role": "user", "content": text},
-                ],
+            raw = provider.chat_json(
+                system=(
+                    "You are a keyword extractor. "
+                    "Return ONLY a JSON array of up to 6 short, meaningful keywords "
+                    "or keyphrases (2-3 words max each) from the text. "
+                    "Focus on technology, tools, concepts. No stop words. "
+                    "Example: [\"LLM Agents\", \"RAG\", \"Playwright\", \"CI/CD\"]"
+                ),
+                user=text,
+                model="gpt-4o-mini",   # cheap + fast model for keyword extraction
                 max_tokens=80,
                 temperature=0.1,
-                response_format={"type": "json_object"},
             )
-            raw = response.choices[0].message.content
             data = json.loads(raw)
             # Model may return {"keywords": [...]} or just [...]
             if isinstance(data, list):
