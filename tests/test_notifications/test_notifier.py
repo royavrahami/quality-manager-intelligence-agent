@@ -166,3 +166,99 @@ def test_send_email_builds_body_and_attempts_send(monkeypatch) -> None:
 
     assert "body" in captured
     assert "Quality Managers in AI World" in captured["body"]
+
+
+def _digest_article(i: int):
+    return SimpleNamespace(
+        title=f"Digest Article {i}",
+        url=f"https://example.com/d-{i}",
+        category="qa_testing",
+        keywords=["kw1", "kw2", "kw3"],
+        relevance_score=70 - i,
+        published_date="01 May 2026",
+        collected_date="02 May 2026",
+    )
+
+
+def _digest_stats():
+    return SimpleNamespace(
+        date_str="01 May 2026",
+        total_articles=2,
+        avg_relevance=60.0,
+        alert_count=1,
+        category_counts={"qa_testing": 2},
+        top_keywords=[("testing", 5), ("genai", 3)],
+    )
+
+
+def test_send_digest_email_builds_and_sends(monkeypatch) -> None:
+    monkeypatch.setattr(_settings, "smtp_user", "from@example.com", raising=False)
+    monkeypatch.setattr(_settings, "smtp_password", "pw", raising=False)
+    monkeypatch.setattr(_settings, "notify_email", "to@example.com", raising=False)
+    monkeypatch.setattr(_settings, "smtp_host", "smtp.example.com", raising=False)
+    monkeypatch.setattr(_settings, "smtp_port", 587, raising=False)
+
+    captured: dict[str, str] = {}
+
+    class FakeSMTP:
+        def __init__(self, *a, **k) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a) -> bool:
+            return False
+
+        def ehlo(self) -> None:
+            pass
+
+        def starttls(self) -> None:
+            pass
+
+        def login(self, *a) -> None:
+            pass
+
+        def sendmail(self, frm, to, body) -> None:
+            captured["body"] = body
+
+    monkeypatch.setattr("src.notifications.email_renderer.smtplib.SMTP", FakeSMTP)
+
+    EmailRenderer.send_digest_email(
+        [_digest_article(1), _digest_article(2)],
+        _digest_stats(),
+        [_trend("Flaky CI surge", "qa_testing")],
+        None,
+    )
+
+    # The HTML body is base64-encoded inside the MIME message; assert on the
+    # plaintext headers and that a non-trivial message was handed to sendmail.
+    assert "body" in captured
+    assert "Quality Managers in AI World" in captured["body"]  # plaintext From header
+    assert len(captured["body"]) > 500
+
+
+def test_send_slack_posts_message(monkeypatch) -> None:
+    import slack_sdk
+
+    monkeypatch.setattr(_settings, "slack_bot_token", "xoxb-test", raising=False)
+    monkeypatch.setattr(_settings, "slack_channel", "#qa", raising=False)
+
+    posted: dict[str, object] = {}
+
+    class FakeWebClient:
+        def __init__(self, token=None) -> None:
+            posted["token"] = token
+
+        def chat_postMessage(self, channel, blocks, text):
+            posted["channel"] = channel
+            posted["blocks"] = blocks
+
+    monkeypatch.setattr(slack_sdk, "WebClient", FakeWebClient)
+
+    from src.notifications.slack_notifier import SlackNotifier
+
+    SlackNotifier.send_slack([_trend("Flaky CI surge", "qa_testing")], None)
+
+    assert posted["channel"] == "#qa"
+    assert isinstance(posted["blocks"], list) and posted["blocks"]

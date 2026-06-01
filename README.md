@@ -221,21 +221,24 @@ pytest tests/test_storage/    # Run a specific module
 
 ```
 ========================= test session starts =========================
-collected 79 items
+collected 102 items
 
-tests/test_collectors/test_rss_collector.py ......                [  7%]
-tests/test_notifications/test_notifier.py ...                     [ 11%]
-tests/test_processors/test_keyword_extractor.py ..........        [ 24%]
-tests/test_processors/test_relevance_scorer.py ..........         [ 36%]
-tests/test_processors/test_summarizer.py ........                 [ 46%]
-tests/test_reports/test_daily_digest_generator.py ............    [ 62%]
-tests/test_reports/test_report_generator.py ..........            [ 74%]
+tests/test_agent/test_trend_analyzer.py .............             [ 12%]
+tests/test_collectors/test_rss_collector.py ......                [ 18%]
+tests/test_notifications/test_notifier.py ........               [ 26%]
+tests/test_processors/test_content_processor.py ..               [ 28%]
+tests/test_processors/test_keyword_extractor.py ..........        [ 38%]
+tests/test_processors/test_relevance_scorer.py ..........         [ 48%]
+tests/test_processors/test_summarizer.py ........                 [ 55%]
+tests/test_reports/test_daily_digest_generator.py ............    [ 67%]
+tests/test_reports/test_report_generator.py ..........            [ 77%]
+tests/test_storage/test_database.py ...                           [ 80%]
 tests/test_storage/test_repository.py ....................        [100%]
 
 ---------- coverage: platform, python 3.12 -----------
-TOTAL                                    2011   1302    35%
+TOTAL                                    2038   1037    49%
 
-========================= 79 passed in 6.63s =========================
+========================= 102 passed in 7.27s =========================
 ```
 
 > Coverage currently concentrates on the scoring, summarisation, reporting
